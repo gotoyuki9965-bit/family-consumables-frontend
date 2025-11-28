@@ -143,12 +143,12 @@ function App() {
     header: { textAlign: "center", color: "#111827", marginBottom: "12px" },
     topRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" },
     filterSelect: { padding: "8px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#fff" },
-    actionBtn: (bg) => ({ background: bg, color: "#fff", padding: "8px 12px", border: "none", borderRadius: "8px", marginLeft: "10px", cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.15)" }),
+    actionBtn: (bg) => ({ background: bg, color: "#fff", padding: "10px 15px", border: "none", borderRadius: "8px", marginLeft: "10px", cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.15)" }),
     card: { background: "#fff", borderRadius: "12px", boxShadow: "0 6px 16px rgba(0,0,0,0.08)", marginBottom: "14px", padding: "14px" },
     itemName: { fontSize: "18px", fontWeight: 600, color: "#1f2937", marginBottom: "6px" },
     qtyBadge: (qty) => ({
       display: "inline-block",
-      padding: "4px 8px",
+      padding: "6px 12spx",
       borderRadius: "6px",
       fontWeight: 600,
       color: qty === 0 ? "#fff" : qty <= 1 ? "#b91c1c" : "#111827",
@@ -190,13 +190,13 @@ function App() {
             onClick={() => setShowAddForm(true)}
             style={styles.actionBtn("#4CAF50")}
           >
-            ➕ 新しい消耗品追加
+            ➕ 新規追加
           </button>
           <button
             onClick={() => setShowDeleteForm(true)}
             style={styles.actionBtn("#EF4444")}
           >
-            🗑️ 消耗品削除
+            🗑️ 項目削除
           </button>
         </div>
       </div>
@@ -254,7 +254,7 @@ function App() {
         <>
           <div style={styles.overlay} onClick={() => setShowAddForm(false)} />
           <div style={styles.modal}>
-            <h3>新しい消耗品を追加</h3>
+            <h3>新規消耗品を追加</h3>
             <input
               type="text"
               placeholder="名前"
