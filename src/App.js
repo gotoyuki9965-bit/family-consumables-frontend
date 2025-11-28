@@ -9,41 +9,43 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [filter, setFilter] = useState("");
 
-  // 各アイテムごとの一時更新値（入力、+1、-1、確定のため）
   const [pendingChanges, setPendingChanges] = useState({});
 
-  // 新規追加フォーム表示
+  // モーダル制御
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showDeleteForm, setShowDeleteForm] = useState(false);
+
   // 新規追加フィールド
   const [newName, setNewName] = useState("");
   const [newQuantity, setNewQuantity] = useState("");
   const [newCategorySelect, setNewCategorySelect] = useState("");
   const [newCategoryInput, setNewCategoryInput] = useState("");
 
-  // ===== API: アイテム一覧 =====
+  // 削除フィールド
+  const [deleteName, setDeleteName] = useState("");
+
+  // ===== データ取得 =====
   const fetchItems = async () => {
     try {
       const res = await fetch(`${API_BASE}/items${filter ? `?category=${encodeURIComponent(filter)}` : ""}`);
       if (!res.ok) throw new Error("アイテム取得失敗");
       const data = await res.json();
       setItems(data);
-      // 初期のpending値は0に
       const init = {};
-      data.forEach(i => { init[i._id] = 0; });
+      data.forEach((i) => { init[i._id] = 0; });
       setPendingChanges(init);
-    } catch (error) {
+    } catch {
       toast.error("アイテム一覧を取得できませんでした");
     }
   };
 
-  // ===== API: カテゴリー一覧 =====
   const fetchCategories = async () => {
     try {
       const res = await fetch(`${API_BASE}/categories`);
       if (!res.ok) throw new Error("カテゴリー取得失敗");
       const data = await res.json();
       setCategories(data);
-    } catch (error) {
+    } catch {
       toast.error("カテゴリー一覧を取得できませんでした");
     }
   };
@@ -53,17 +55,13 @@ function App() {
     fetchCategories();
   }, [filter]);
 
-  // ===== 新規アイテム追加 =====
+  // ===== 新規追加 =====
   const addItem = async () => {
-    const categoryFinal = (newCategoryInput && newCategoryInput.trim().length > 0)
-      ? newCategoryInput.trim()
-      : newCategorySelect;
-
+    const categoryFinal = newCategoryInput.trim() ? newCategoryInput.trim() : newCategorySelect;
     if (!newName || !newQuantity || !categoryFinal) {
-      toast.error("名前・個数・カテゴリーを入力または選択してください");
+      toast.error("名前・個数・カテゴリーを入力してください");
       return;
     }
-
     try {
       const res = await fetch(`${API_BASE}/items`, {
         method: "POST",
@@ -71,33 +69,52 @@ function App() {
         body: JSON.stringify({
           name: newName.trim(),
           quantity: Number(newQuantity),
-          category: categoryFinal,
+          category: categoryFinal
         }),
       });
       if (!res.ok) throw new Error("追加失敗");
       await res.json();
       toast.success("新しい消耗品を追加しました");
-      setNewName("");
-      setNewQuantity("");
-      setNewCategorySelect("");
-      setNewCategoryInput("");
+      setNewName(""); setNewQuantity(""); setNewCategorySelect(""); setNewCategoryInput("");
       setShowAddForm(false);
       fetchItems();
       fetchCategories();
-    } catch (error) {
+    } catch {
       toast.error("追加に失敗しました");
     }
   };
 
-  // ===== 在庫数更新（入力、＋1、－1、確定） =====
+  // ===== 削除 =====
+  const deleteItem = async () => {
+    if (!deleteName.trim()) {
+      toast.error("削除する名前を入力してください");
+      return;
+    }
+    try {
+      const target = items.find((i) => i.name === deleteName.trim());
+      if (!target) {
+        toast.error("該当アイテムが見つかりません");
+        return;
+      }
+      const res = await fetch(`${API_BASE}/items/${target._id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("削除失敗");
+      toast.success("消耗品を削除しました");
+      setDeleteName("");
+      setShowDeleteForm(false);
+      fetchItems();
+      fetchCategories();
+    } catch {
+      toast.error("削除に失敗しました");
+    }
+  };
+
+  // ===== 在庫更新 =====
   const setChangeForItem = (id, value) => {
-    setPendingChanges(prev => ({ ...prev, [id]: value }));
+    setPendingChanges((prev) => ({ ...prev, [id]: value }));
   };
-
   const bumpChange = (id, delta) => {
-    setPendingChanges(prev => ({ ...prev, [id]: (prev[id] || 0) + delta }));
+    setPendingChanges((prev) => ({ ...prev, [id]: (prev[id] || 0) + delta }));
   };
-
   const confirmUpdate = async (id) => {
     const change = Number(pendingChanges[id] || 0);
     if (!Number.isFinite(change) || change === 0) {
@@ -115,18 +132,19 @@ function App() {
       toast.success("在庫を更新しました");
       setChangeForItem(id, 0);
       fetchItems();
-    } catch (error) {
+    } catch {
       toast.error("在庫更新に失敗しました");
     }
   };
 
-  // ===== ちょっとおしゃれなスタイル =====
+  // ===== スタイル =====
   const styles = {
     page: { padding: "20px", fontFamily: "Segoe UI, Arial, sans-serif", backgroundColor: "#f6f7fb", minHeight: "100vh" },
-    headerRow: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" },
-    filterSelect: { padding: "8px 10px", borderRadius: "8px", border: "1px solid #d0d4dd", background: "#fff", color: "#333" },
-    addBtn: { backgroundColor: "#4CAF50", color: "#fff", padding: "10px 14px", border: "none", borderRadius: "8px", boxShadow: "0 2px 6px rgba(0,0,0,0.15)", cursor: "pointer" },
-    card: { backgroundColor: "#fff", borderRadius: "12px", boxShadow: "0 6px 16px rgba(0,0,0,0.08)", marginBottom: "14px", padding: "14px" },
+    header: { textAlign: "center", color: "#111827", marginBottom: "12px" },
+    topRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" },
+    filterSelect: { padding: "8px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#fff" },
+    actionBtn: (bg) => ({ background: bg, color: "#fff", padding: "8px 12px", border: "none", borderRadius: "8px", marginLeft: "10px", cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.15)" }),
+    card: { background: "#fff", borderRadius: "12px", boxShadow: "0 6px 16px rgba(0,0,0,0.08)", marginBottom: "14px", padding: "14px" },
     itemName: { fontSize: "18px", fontWeight: 600, color: "#1f2937", marginBottom: "6px" },
     qtyBadge: (qty) => ({
       display: "inline-block",
@@ -143,28 +161,44 @@ function App() {
     btnPlus: { padding: "6px 10px", borderRadius: "8px", border: "none", background: "#2563eb", color: "#fff", marginRight: "6px", cursor: "pointer" },
     btnMinus: { padding: "6px 10px", borderRadius: "8px", border: "none", background: "#ef4444", color: "#fff", marginRight: "6px", cursor: "pointer" },
     btnConfirm: { padding: "6px 10px", borderRadius: "8px", border: "none", background: "#10b981", color: "#fff", cursor: "pointer" },
-    addForm: { background: "#fff", borderRadius: "12px", boxShadow: "0 6px 16px rgba(0,0,0,0.08)", padding: "14px", marginTop: "10px" },
-    addInput: { width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #d1d5db", marginBottom: "10px" },
-    addRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" },
-    addRow3: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" },
-    addSelect: { width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #d1d5db" },
-    addBtnPrimary: { background: "#2563eb", color: "#fff", padding: "10px 12px", border: "none", borderRadius: "8px", cursor: "pointer", marginRight: "8px" },
-    addBtnSecondary: { background: "#6b7280", color: "#fff", padding: "10px 12px", border: "none", borderRadius: "8px", cursor: "pointer" }
+    overlay: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.3)", zIndex: 999 },
+    modal: { position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", background: "#fff", padding: "20px", borderRadius: "12px", boxShadow: "0 6px 16px rgba(0,0,0,0.2)", zIndex: 1000, width: "320px" },
+    modalInput: { width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #d1d5db", marginBottom: "10px" },
+    modalRow: { display: "flex", justifyContent: "space-between" }
   };
 
   return (
     <div style={styles.page}>
-      <h1 style={{ textAlign: "center", color: "#111827", marginBottom: "12px" }}>📦 消耗品管理アプリ</h1>
+      <h1 style={styles.header}>📦 消耗品管理アプリ</h1>
 
-      {/* フィルタ + 新規追加ボタン（隣） */}
-      <div style={styles.headerRow}>
-        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={styles.filterSelect}>
+      {/* フィルタ + 新規追加 + 削除ボタン（右並び） */}
+      <div style={styles.topRow}>
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          style={styles.filterSelect}
+        >
           <option value="">すべて</option>
           {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>
+              {c}
+            </option>
           ))}
         </select>
-        <button style={styles.addBtn} onClick={() => setShowAddForm(true)}>➕ 新しい消耗品追加</button>
+        <div>
+          <button
+            onClick={() => setShowAddForm(true)}
+            style={styles.actionBtn("#4CAF50")}
+          >
+            ➕ 新しい消耗品追加
+          </button>
+          <button
+            onClick={() => setShowDeleteForm(true)}
+            style={styles.actionBtn("#EF4444")}
+          >
+            🗑️ 消耗品削除
+          </button>
+        </div>
       </div>
 
       {/* アイテム一覧 */}
@@ -172,7 +206,9 @@ function App() {
         <div key={item._id} style={styles.card}>
           <div style={styles.itemName}>{item.name}</div>
           <div>
-            <span style={styles.qtyBadge(item.quantity)}>残数: {item.quantity}</span>
+            <span style={styles.qtyBadge(item.quantity)}>
+              残数: {item.quantity}
+            </span>
           </div>
           <div style={styles.etaText}>
             {item.estimatedDaysLeft == null
@@ -181,51 +217,68 @@ function App() {
           </div>
           <div style={styles.catText}>カテゴリー: {item.category}</div>
 
-          {/* 数量更新UI（入力、＋1、－1、確定） */}
+          {/* 数量更新（入力、＋1、－1、確定） */}
           <div style={{ marginTop: "10px" }}>
             <input
               type="number"
               value={pendingChanges[item._id] ?? 0}
-              onChange={(e) => setChangeForItem(item._id, Number(e.target.value))}
+              onChange={(e) =>
+                setChangeForItem(item._id, Number(e.target.value))
+              }
               style={styles.inputSmall}
             />
-            <button style={styles.btnPlus} onClick={() => bumpChange(item._id, +1)}>＋1</button>
-            <button style={styles.btnMinus} onClick={() => bumpChange(item._id, -1)}>－1</button>
-            <button style={styles.btnConfirm} onClick={() => confirmUpdate(item._id)}>確定</button>
+            <button
+              style={styles.btnPlus}
+              onClick={() => bumpChange(item._id, +1)}
+            >
+              ＋1
+            </button>
+            <button
+              style={styles.btnMinus}
+              onClick={() => bumpChange(item._id, -1)}
+            >
+              －1
+            </button>
+            <button
+              style={styles.btnConfirm}
+              onClick={() => confirmUpdate(item._id)}
+            >
+              確定
+            </button>
           </div>
         </div>
       ))}
 
-      {/* 新規追加フォーム（モーダル風にカードを表示） */}
+      {/* 新規追加モーダル（ポップアップ） */}
       {showAddForm && (
-        <div style={styles.addForm}>
-          <div style={styles.addRow}>
+        <>
+          <div style={styles.overlay} onClick={() => setShowAddForm(false)} />
+          <div style={styles.modal}>
+            <h3>新しい消耗品を追加</h3>
             <input
               type="text"
               placeholder="名前"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              style={styles.addInput}
+              style={styles.modalInput}
             />
             <input
               type="number"
               placeholder="個数"
               value={newQuantity}
               onChange={(e) => setNewQuantity(e.target.value)}
-              style={styles.addInput}
+              style={styles.modalInput}
             />
-          </div>
-
-          {/* カテゴリーは選択 + 入力（入力が優先される） */}
-          <div style={styles.addRow3}>
             <select
               value={newCategorySelect}
               onChange={(e) => setNewCategorySelect(e.target.value)}
-              style={styles.addSelect}
+              style={styles.modalInput}
             >
               <option value="">カテゴリー選択（既存）</option>
               {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
             <input
@@ -233,15 +286,52 @@ function App() {
               placeholder="新規カテゴリーを入力（任意）"
               value={newCategoryInput}
               onChange={(e) => setNewCategoryInput(e.target.value)}
-              style={styles.addInput}
+              style={styles.modalInput}
             />
+            <div style={styles.modalRow}>
+              <button onClick={addItem} style={styles.actionBtn("#2563eb")}>
+                追加
+              </button>
+              <button
+                onClick={() => setShowAddForm(false)}
+                style={styles.actionBtn("#6b7280")}
+              >
+                キャンセル
+              </button>
+            </div>
           </div>
+        </>
+      )}
 
-          <div style={{ marginTop: "10px" }}>
-            <button style={styles.addBtnPrimary} onClick={addItem}>追加</button>
-            <button style={styles.addBtnSecondary} onClick={() => setShowAddForm(false)}>キャンセル</button>
+      {/* 削除モーダル（ポップアップ：名前入力→確定） */}
+      {showDeleteForm && (
+        <>
+          <div
+            style={styles.overlay}
+            onClick={() => setShowDeleteForm(false)}
+          />
+          <div style={styles.modal}>
+            <h3>消耗品を削除</h3>
+            <input
+              type="text"
+              placeholder="削除する名前を入力"
+              value={deleteName}
+              onChange={(e) => setDeleteName(e.target.value)}
+              style={styles.modalInput}
+            />
+            <div style={styles.modalRow}>
+              <button onClick={deleteItem} style={styles.actionBtn("#ef4444")}>
+                削除
+              </button>
+              <button
+                onClick={() => setShowDeleteForm(false)}
+                style={styles.actionBtn("#6b7280")}
+              >
+                キャンセル
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       <ToastContainer position="bottom-center" autoClose={2500} />
