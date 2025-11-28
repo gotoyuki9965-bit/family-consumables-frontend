@@ -20,6 +20,7 @@ function App() {
   const [newQuantity, setNewQuantity] = useState("");
   const [newCategorySelect, setNewCategorySelect] = useState("");
   const [newCategoryInput, setNewCategoryInput] = useState("");
+  const [newUrl, setNewUrl] = useState("");   // ← 追加
 
   // 削除フィールド
   const [deleteName, setDeleteName] = useState("");
@@ -76,7 +77,11 @@ function App() {
       if (!res.ok) throw new Error("追加失敗");
       await res.json();
       toast.success("新しい消耗品を追加しました");
-      setNewName(""); setNewQuantity(""); setNewCategorySelect(""); setNewCategoryInput("");
+      setNewName(""); 
+      setNewQuantity(""); 
+      setNewCategorySelect(""); 
+      setNewCategoryInput(""); 
+      setNewUrl("");   // ← リセット追加
       setShowAddForm(false);
       fetchItems();
       fetchCategories();
@@ -143,13 +148,13 @@ function App() {
     page: { padding: "20px", fontFamily: "Segoe UI, Arial, sans-serif", backgroundColor: "#f6f7fb", minHeight: "100vh" },
     header: { textAlign: "center", color: "#111827", marginBottom: "12px" },
     topRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" },
-    filterSelect: { padding: "8px", borderRadius: "10spx", border: "1px solid #d1d5db", background: "#fff" },
+    filterSelect: { padding: "8px", borderRadius: "10px", border: "1px solid #d1d5db", background: "#fff" }, // ← 修正
     actionBtn: (bg) => ({ background: bg, color: "#fff", padding: "10px 15px", border: "none", borderRadius: "8px", marginLeft: "10px", cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.15)" }),
     card: { background: "#fff", borderRadius: "12px", boxShadow: "0 6px 16px rgba(0,0,0,0.08)", marginBottom: "14px", padding: "14px" },
     itemName: { fontSize: "18px", fontWeight: 600, color: "#1f2937", marginBottom: "6px" },
     qtyBadge: (qty) => ({
       display: "inline-block",
-      padding: "8px 14spx",
+      padding: "8px 14px",   // ← 修正
       borderRadius: "6px",
       fontWeight: 600,
       color: qty === 0 ? "#fff" : qty <= 1 ? "#b91c1c" : "#111827",
@@ -264,7 +269,7 @@ function App() {
         </div>
       ))}
 
-      {/* 新規追加モーダル（ポップアップ） */}
+      {/* 新規追加モーダル */}
       {showAddForm && (
         <>
           <div style={styles.overlay} onClick={() => setShowAddForm(false)} />
@@ -325,7 +330,7 @@ function App() {
         </>
       )}
 
-      {/* 削除モーダル（ポップアップ：名前入力→確定） */}
+      {/* 削除モーダル */}
       {showDeleteForm && (
         <>
           <div
