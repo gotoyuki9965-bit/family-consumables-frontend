@@ -69,7 +69,8 @@ function App() {
         body: JSON.stringify({
           name: newName.trim(),
           quantity: Number(newQuantity),
-          category: categoryFinal
+          category: categoryFinal,
+          url: newUrl.trim()   // ← 追加
         }),
       });
       if (!res.ok) throw new Error("追加失敗");
@@ -217,6 +218,20 @@ function App() {
           </div>
           <div style={styles.catText}>カテゴリー: {item.category}</div>
 
+          {/* 購入リンク */}
+          {item.url && (
+            <div style={{ marginTop: "6px" }}>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#2563eb" }}
+              >
+                🛒 購入ページへ
+              </a>
+            </div>
+          )}
+
           {/* 数量更新（入力、＋1、－1、確定） */}
           <div style={{ marginTop: "10px" }}>
             <input
@@ -288,6 +303,13 @@ function App() {
               onChange={(e) => setNewCategoryInput(e.target.value)}
               style={styles.modalInput}
             />
+            <input
+              type="text"
+              placeholder="購入リンク（任意）"
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              style={styles.modalInput}
+            />            
             <div style={styles.modalRow}>
               <button onClick={addItem} style={styles.actionBtn("#2563eb")}>
                 追加
