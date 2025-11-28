@@ -4,9 +4,10 @@ import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [items, setItems] = useState([]);
-  const [category, setCategory] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newQuantity, setNewQuantity] = useState("");
+  const [newCategory, setNewCategory] = useState("");
 
-  // Render上のバックエンドURL
   const API_BASE = "https://gotoyuki-app.onrender.com";
 
   // ===== アイテム一覧を取得 =====
@@ -25,12 +26,32 @@ function App() {
     fetchItems();
   }, []);
 
-  // ===== 背景色ロジック =====
-  const getBackgroundColor = (days) => {
-    if (days == null) return "#ddf"; // データなしは青
-    if (days <= 0) return "#ffdddd"; // 赤：在庫切れ
-    if (days <= 3) return "#ffe5b4"; // オレンジ：残り少ない
-    return "#ddf";                   // 青：余裕あり
+  // ===== 新規アイテム追加 =====
+  const addItem = async () => {
+    if (!newName || !newQuantity || !newCategory) {
+      toast.error("名前・個数・カテゴリーを入力してください");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newName,
+          quantity: Number(newQuantity),
+          category: newCategory,
+        }),
+      });
+      if (!res.ok) throw new Error("追加失敗");
+      await res.json();
+      toast.success("新しい消耗品を追加しました");
+      setNewName("");
+      setNewQuantity("");
+      setNewCategory("");
+      fetchItems();
+    } catch (error) {
+      toast.error("追加に失敗しました");
+    }
   };
 
   // ===== 在庫数更新（＋／－） =====
@@ -44,22 +65,9 @@ function App() {
       if (!res.ok) throw new Error("数量更新失敗");
       await res.json();
       toast.success("在庫を更新しました");
-      fetchItems(); // 更新後に再取得
+      fetchItems();
     } catch (error) {
       toast.error("在庫更新に失敗しました");
-    }
-  };
-
-  // ===== 通知API呼び出し =====
-  const handleNotify = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/notify`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("通知失敗");
-      toast.info("通知を送信しました");
-    } catch (error) {
-      toast.error("通知サーバーに接続できませんでした");
     }
   };
 
@@ -67,18 +75,9 @@ function App() {
     <div style={{ padding: "20px" }}>
       <h1>消耗品管理アプリ</h1>
 
-      {/* アイテム一覧表示 */}
+      {/* アイテム一覧 */}
       {items.map((item) => (
-        <div
-          key={item._id}
-          style={{
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            padding: "10px",
-            marginBottom: "10px",
-            backgroundColor: getBackgroundColor(item.estimatedDaysLeft),
-          }}
-        >
+        <div key={item._id} style={{ border: "1px solid #ccc", marginBottom: "10px", padding: "10px" }}>
           <strong>{item.name}</strong>
           <div>残数: {item.quantity}</div>
           <div>
@@ -86,22 +85,34 @@ function App() {
               ? "残日数未計算"
               : `あと${item.estimatedDaysLeft.toFixed(1)}日`}
           </div>
-          <div>カテゴリー: {item.category || "未分類"}</div>
-
-          {/* ＋／－ボタン */}
-          <div style={{ marginTop: "10px" }}>
-            <button onClick={() => updateQuantity(item._id, +1)}>＋購入</button>
-            <button onClick={() => updateQuantity(item._id, -1)}>－消費</button>
-          </div>
+          <div>カテゴリー: {item.category}</div>
+          <button onClick={() => updateQuantity(item._id, +1)}>＋購入</button>
+          <button onClick={() => updateQuantity(item._id, -1)}>－消費</button>
         </div>
       ))}
 
-      {/* 通知送信ボタン */}
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={handleNotify}>通知送信</button>
-      </div>
+      {/* 新規追加フォーム */}
+      <h2>新しい消耗品を追加</h2>
+      <input
+        type="text"
+        placeholder="名前"
+        value={newName}
+        onChange={(e) => setNewName(e.target.value)}
+      />
+      <input
+        type="number"
+        placeholder="個数"
+        value={newQuantity}
+        onChange={(e) => setNewQuantity(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="カテゴリー"
+        value={newCategory}
+        onChange={(e) => setNewCategory(e.target.value)}
+      />
+      <button onClick={addItem}>追加</button>
 
-      {/* トースト通知のコンテナ */}
       <ToastContainer position="bottom-center" autoClose={3000} />
     </div>
   );
