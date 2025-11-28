@@ -162,7 +162,7 @@ function App() {
     btnMinus: { padding: "6px 10px", borderRadius: "8px", border: "none", background: "#ef4444", color: "#fff", marginRight: "6px", cursor: "pointer" },
     btnConfirm: { padding: "6px 10px", borderRadius: "8px", border: "none", background: "#10b981", color: "#fff", cursor: "pointer" },
     overlay: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.3)", zIndex: 999 },
-    modal: { position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", background: "#fff", padding: "20px", borderRadius: "12px", boxShadow: "0 6px 16px rgba(0,0,0,0.2)", zIndex: 1000, width: "320spx" },
+    modal: { position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", background: "#fff", padding: "20px", borderRadius: "12px", boxShadow: "0 6px 16px rgba(0,0,0,0.2)", zIndex: 1000, width: "320px" },
     modalInput: { width: "80%", padding: "8px 10px", borderRadius: "8px", border: "1px solid #d1d5db", marginBottom: "10px" },
     modalRow: { display: "flex", justifyContent: "space-between" }
   };
